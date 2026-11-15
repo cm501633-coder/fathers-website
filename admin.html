@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | Customer Inquiries</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-dark: #172554;
+      --text-main: #1f2937;
+      --text-muted: #64748b;
+      --bg-light: #f8fafc;
+      --border: #e2e8f0;
+      --card-bg: #ffffff;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-light);
+      color: var(--text-main);
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      color: var(--primary-dark);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .btn {
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      border: none;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-outline {
+      background: #fff;
+      color: var(--text-main);
+      border: 1px solid var(--border);
+    }
+
+    .btn-outline:hover {
+      background: #f1f5f9;
+    }
+
+    .stats-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .stat-number {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .stat-label {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    .table-container {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow-x: auto;
+      box-shadow: var(--shadow);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.95rem;
+    }
+
+    th, td {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: #f1f5f9;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: #f8fafc;
+    }
+
+    .contact-link {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    .contact-link:hover {
+      text-decoration: underline;
+    }
+
+    .message-cell {
+      max-width: 320px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: var(--text-main);
+      line-height: 1.5;
+    }
+
+    .date-badge {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .empty-state {
+      padding: 3rem;
+      text-align: center;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div>
+        <h1>📊 Customer Inquiries & Messages</h1>
+        <p style="color: var(--text-muted); margin-top: 0.25rem;">Live inquiries stored in your PostgreSQL database.</p>
+      </div>
+      <div class="header-actions">
+        <a href="/" class="btn btn-outline">← Back to Website</a>
+        <button id="refreshBtn" class="btn btn-primary" onclick="loadMessages()">🔄 Refresh</button>
+      </div>
+    </header>
+
+    <div class="stats-card">
+      <div class="stat-number" id="totalCount">0</div>
+      <div>
+        <div class="stat-label">Total Inquiries Received</div>
+        <div style="font-size: 0.8rem; color: #94a3b8;">Updated in real-time</div>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Date & Time</th>
+            <th>Client Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Message</th>
+          </tr>
+        </thead>
+        <tbody id="messagesTableBody">
+          <tr>
+            <td colspan="5" class="empty-state">Loading messages...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    async function loadMessages() {
+      const tbody = document.getElementById('messagesTableBody');
+      const countEl = document.getElementById('totalCount');
+
+      try {
+        const response = await fetch('/api/messages');
+        const data = await response.json();
+
+        if (data.success && data.messages.length > 0) {
+          countEl.textContent = data.count;
+          tbody.innerHTML = '';
+
+          data.messages.forEach(msg => {
+            const row = document.createElement('tr');
+            
+            const date = new Date(msg.created_at);
+            const formattedDate = date.toLocaleString('en-US', {
+              dateStyle: 'medium',
+              timeStyle: 'short'
+            });
+
+            row.innerHTML = `
+              <td class="date-badge">${formattedDate}</td>
+              <td><strong>${escapeHtml(msg.name)}</strong></td>
+              <td><a class="contact-link" href="mailto:${escapeHtml(msg.email)}">${escapeHtml(msg.email)}</a></td>
+              <td>${msg.phone ? `<a class="contact-link" href="tel:${escapeHtml(msg.phone)}">${escapeHtml(msg.phone)}</a>` : '<span style="color:#94a3b8;">None</span>'}</td>
+              <td class="message-cell">${escapeHtml(msg.message)}</td>
+            `;
+
+            tbody.appendChild(row);
+          });
+        } else {
+          countEl.textContent = '0';
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="5" class="empty-state">No inquiries received yet. New submissions will appear here automatically!</td>
+            </tr>
+          `;
+        }
+      } catch (err) {
+        console.error('Error fetching messages:', err);
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="empty-state" style="color: #dc2626;">Could not connect to database or server.</td>
+          </tr>
+        `;
+      }
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Load on page startup
+    document.addEventListener('DOMContentLoaded', loadMessages);
+  </script>
+</body>
+</html>

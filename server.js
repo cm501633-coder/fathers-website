@@ -60,6 +60,11 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// Admin route: view inquiries dashboard
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
 // 2. API route: Submit contact form to PostgreSQL
 app.post('/api/contact', async (req, res) => {
   const { name, email, phone, message } = req.body;
